@@ -28,23 +28,36 @@ const stories = [
 ];
 
 function App() {
-  const [searchTerm, setSearchTerm] = React.useState('');
-
-  const handleChange = event => {
-    setSearchTerm(event.target.value);
+  const handleSearch = event => {
+    console.log(event.target.value);
   };
 
   return (
     <div>
       <h1>Hacker News</h1>
       <hr />
-      <label htmlFor="search">Search: </label>
-      <input id="search" type="text" onChange={handleChange} />&nbsp;&nbsp;&nbsp;Searching For: <strong>{searchTerm}</strong>
+      <SearchForm onSearch={handleSearch} />
       <hr />
       <List list={stories} />
     </div>
   );
 }
+
+const SearchForm = props => {
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const handleChange = event => {
+    setSearchTerm(event.target.value);
+    props.onSearch(event);
+  };
+
+  return (
+    <div>
+      <label htmlFor="search">Search: </label>
+      <input id="search" type="text" onChange={handleChange} />&nbsp;&nbsp;&nbsp;Searching For: <strong>{searchTerm}</strong>
+    </div>
+  );
+};
 
 const List = props =>
   props.list.map((item) => (
