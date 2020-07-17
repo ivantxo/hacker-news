@@ -1,26 +1,55 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+
+const stories = [
+  {
+    title: 'React',
+    url: 'https://reactjs.org',
+    author: 'Jordan Walke',
+    num_comments: 3,
+    points: 4,
+    objectID: 0,
+  },
+  {
+    title: 'Redux',
+    url: 'https://redux.js.org',
+    author: 'Dan Abramov, Andrew Clark',
+    num_comments: 2,
+    points: 5,
+    objectID: 1,
+  },
+  {
+    title: 'PHP',
+    url: 'https://php.net',
+    author: 'Rasmus Lerdorf',
+    num_comments: 10,
+    points: 10,
+    objectID: 2,
+  },
+];
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Hacker News</h1>
+      <hr />
+      <label htmlFor="search">Search: </label>
+      <input id="search" type="text" />
+      <hr />
+      <List list={stories} />
     </div>
   );
 }
+
+const List = props =>
+  props.list.map((item) => (
+    <div key={item.objectID} style={{ display: 'flex', marginBottom: '10px' }}>
+      <span style={{ width: '20%' }}>
+        <a href={item.url}>{item.title}</a>
+      </span>
+      <span style={{ width: '20%' }}>{item.author}</span>
+      <span style={{ width: '10%' }}>{item.num_comments}</span>
+      <span style={{ width: '10%' }}>{item.points}</span>
+    </div>
+  ));
 
 export default App;
