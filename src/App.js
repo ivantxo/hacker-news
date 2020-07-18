@@ -44,7 +44,7 @@ function App() {
     <div>
       <h1>Hacker News</h1>
       <hr />
-      <SearchForm onSearch={handleSearch} searchTerm={searchTerm} />
+      <SearchForm onSearch={handleSearch} search={searchTerm} />
       <hr />
       <List list={searchedStories} />
     </div>
@@ -55,7 +55,14 @@ const SearchForm = props => {
   return (
     <div>
       <label htmlFor="search">Search: </label>
-      <input id="search" type="text" onChange={props.onSearch} />&nbsp;&nbsp;&nbsp;Searching For: <strong>{props.searchTerm}</strong>
+      <input 
+        id="search"
+        type="text"
+        value={props.search}
+        onChange={props.onSearch}
+      />
+        &nbsp;&nbsp;&nbsp;
+        Searching For: <strong>{props.search}</strong>
     </div>
   );
 };
