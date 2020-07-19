@@ -28,10 +28,13 @@ const stories = [
 ];
 
 function App() {
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchTerm, setSearchTerm] = React.useState(
+    localStorage.getItem('search') || ''
+  );
 
   const handleSearch = event => {
     setSearchTerm(event.target.value);
+    localStorage.setItem('search', event.target.value);
   };
 
   const searchedStories = stories.filter(story => {
