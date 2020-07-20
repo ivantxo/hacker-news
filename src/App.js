@@ -54,24 +54,28 @@ function App() {
     <div>
       <h1>Hacker News</h1>
       <hr />
-      <SearchForm onSearch={handleSearch} search={searchTerm} />
+      <InputWithLabel
+        id="search"
+        label="Search"
+        value={searchTerm}
+        onInputChange={handleSearch}
+      />
       <hr />
       <List list={searchedStories} />
     </div>
   );
 }
 
-const SearchForm = ({ onSearch, search }) => (
+const InputWithLabel = ({ id, label, value, type = 'text', onInputChange }) => (
   <>
-    <label htmlFor="search">Search: </label>
-    <input 
-      id="search"
-      type="text"
-      onChange={onSearch}
-      value={search}
+    <label htmlFor={id}>{label}</label>
+    &nbsp;
+    <input
+      id={id}
+      type={type}
+      value={value}
+      onChange={onInputChange}
     />
-      &nbsp;&nbsp;&nbsp;
-      Searching For: <strong>{search}</strong>
   </>
 );
 
