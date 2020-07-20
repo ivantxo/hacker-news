@@ -27,14 +27,18 @@ const stories = [
   },
 ];
 
-function App() {
-  const [searchTerm, setSearchTerm] = React.useState(
-    localStorage.getItem('search') || ''
+const useSemiPersistanceState = (key, initialState) => {
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) || initialState
   );
-
   React.useEffect(() => {
-    localStorage.setItem('search', searchTerm);
-  }, [searchTerm]);
+    localStorage.setItem(key, value);
+  }, [key, value]);
+  return [value, setValue];
+};
+
+function App() {
+  const [searchTerm, setSearchTerm] = useSemiPersistanceState('search', '');
 
   const handleSearch = event => {
     setSearchTerm(event.target.value);
