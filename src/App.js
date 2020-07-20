@@ -1,6 +1,6 @@
 import React from 'react';
 
-const stories = [
+const initialStories = [
   {
     title: 'React',
     url: 'https://reactjs.org',
@@ -39,6 +39,8 @@ const useSemiPersistanceState = (key, initialState) => {
 
 function App() {
   const [searchTerm, setSearchTerm] = useSemiPersistanceState('search', '');
+
+  const [stories, setStories] = React.useState(initialStories);
 
   const handleSearch = event => {
     setSearchTerm(event.target.value);
