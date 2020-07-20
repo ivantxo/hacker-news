@@ -46,6 +46,13 @@ function App() {
     setSearchTerm(event.target.value);
   };
 
+  const handleRemoveStory = item => {
+    const newStories = stories.filter(
+      story => item.objectID !== story.objectID
+    );
+    setStories(newStories);
+  };
+
   const searchedStories = stories.filter(story => {
     return story.title
       .toLowerCase()
@@ -64,7 +71,10 @@ function App() {
         <strong>Search:</strong>
       </InputWithLabel>
       <hr />
-      <List list={searchedStories} />
+      <List
+        list={searchedStories}
+        onRemoveItem={handleRemoveStory}
+      />
     </div>
   );
 }
@@ -82,10 +92,16 @@ const InputWithLabel = ({ id, value, type = 'text', onInputChange, children }) =
   </>
 );
 
-const List = ({ list }) =>
-  list.map((item) => <Item key={item.objectID} item={item} />);
+const List = ({ list, onRemoveItem }) =>
+  list.map((item) => (
+    <Item 
+      key={item.objectID} 
+      item={item} 
+      onRemoveItem={onRemoveItem}
+    />)
+  );
 
-const Item = ({ item }) => (
+const Item = ({ item, onRemoveItem }) => (
   <div style={{ display: 'flex', marginBottom: '10px' }}>
     <span style={{ width: '20%' }}>
       <a href={item.url}>{item.title}</a>
@@ -93,6 +109,11 @@ const Item = ({ item }) => (
     <span style={{ width: '20%' }}>{item.author}</span>
     <span style={{ width: '10%' }}>{item.num_comments}</span>
     <span style={{ width: '10%' }}>{item.points}</span>
+    <span>
+      <button type="button" onClick={() => onRemoveItem(item)}>
+        Dismiss
+      </button>
+    </span>
   </div>
 );
 
