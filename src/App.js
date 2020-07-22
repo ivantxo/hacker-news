@@ -52,15 +52,18 @@ const storiesReducer = (state, action) => {
 function App() {
   const [searchTerm, setSearchTerm] = useSemiPersistanceState('search', '');
 
+  const [url, setUrl] = React.useState(
+    `${API_ENDPOINT}${searchTerm}`
+  );
+
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
     { data: [], isLoading: false, isError: false }
   );
 
   React.useEffect(() => {
-    if (!searchTerm) return;
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
-    fetch(`${API_ENDPOINT}${searchTerm}`)
+    fetch(url)
       .then(response => response.json())
       .then(result => {
         dispatchStories({
@@ -71,9 +74,9 @@ function App() {
       .catch(() => 
         dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
       );
-  }, [searchTerm]);
+  }, [url]);
 
-  const handleSearch = event => {
+  const handleSearchInput = event => {
     setSearchTerm(event.target.value);
   };
 
@@ -84,6 +87,10 @@ function App() {
     });
   };
 
+  const handleSearchSubmit = () => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
+  };
+
   return (
     <div>
       <h1>Hacker News</h1>
@@ -91,10 +98,17 @@ function App() {
       <InputWithLabel
         id="search"
         value={searchTerm}
-        onInputChange={handleSearch}
+        onInputChange={handleSearchInput}
       >
         <strong>Search:</strong>
-      </InputWithLabel>
+      </InputWithLabel>&nbsp;&nbsp;
+      <button
+        type="button"
+        disabled={!searchTerm}
+        onClick={handleSearchSubmit}
+      >
+        Submit
+      </button>
       <hr />
 
       {stories.isError && <p>Something went wrong...</p>}
@@ -136,13 +150,13 @@ const List = ({ list, onRemoveItem }) =>
 
 const Item = ({ item, onRemoveItem }) => (
   <div style={{ display: 'flex', marginBottom: '10px' }}>
-    <span style={{ width: '20%' }}>
+    <span style={{ width: '40%' }}>
       <a href={item.url}>{item.title}</a>
     </span>
-    <span style={{ width: '20%' }}>{item.author}</span>
-    <span style={{ width: '10%' }}>{item.num_comments}</span>
-    <span style={{ width: '10%' }}>{item.points}</span>
-    <span>
+    <span style={{ width: '10%' }}>{item.author}</span>
+    <span style={{ width: '5%' }}>{item.num_comments}</span>
+    <span style={{ width: '5%' }}>{item.points}</span>
+    <span style={{ width: '5%' }}>
       <button type="button" onClick={() => onRemoveItem(item)}>
         Dismiss
       </button>
