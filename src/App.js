@@ -35,6 +35,10 @@ const getAsyncStories = () =>
       )
   );
 
+// Generate an error when getting stories
+// const getAsyncStories = () =>
+//   new Promise((resolve, reject) => setTimeout(reject, 2000));
+
 const useSemiPersistanceState = (key, initialState) => {
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
@@ -47,13 +51,35 @@ const useSemiPersistanceState = (key, initialState) => {
 
 const storiesReducer = (state, action) => {
   switch (action.type) {
-    case 'SET_STORIES':
-      return action.payload;
+    case 'STORIES_FETCH_INIT':
+      return {
+        ...state,
+        isLoading: true,
+        isError: false,
+      };
+      
+    case 'STORIES_FETCH_SUCCESS':
+      return {
+        ...state,
+        isLoading: false,
+        isError: false,
+        data: action.payload,
+      };
+
+    case 'STORIES_FETCH_FAILURE':
+      return {
+        ...state,
+        isLoading: false,
+        isError: true
+      };
 
     case 'REMOVE_STORY':
-      return state.filter(
-        story => action.payload.objectID !== story.objectID
-      );
+      return {
+        ...state,
+        data: state.data.filter(
+          story => action.payload.objectID !== story.objectID
+        ),
+      }
 
     default:
         throw new Error();
@@ -65,24 +91,21 @@ function App() {
 
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
-    []
+    { data: [], isLoading: false, isError: false }
   );
 
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const [isError, setIsError] = React.useState(false);
-
   React.useEffect(() => {
-    setIsLoading(true);
+    dispatchStories({ type: 'STORIES_FETCH_INIT' });
     getAsyncStories()
       .then(result => {
         dispatchStories({
-          type: 'SET_STORIES',
+          type: 'STORIES_FETCH_SUCCESS',
           payload: result.data.stories,
         });
-        setIsLoading(false);
       })
-      .catch(() => setIsError(true));
+      .catch(() => 
+        dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
+      );
   }, []);
 
   const handleSearch = event => {
@@ -96,7 +119,7 @@ function App() {
     });
   };
 
-  const searchedStories = stories.filter(story => {
+  const searchedStories = stories.data.filter(story => {
     return story.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -114,18 +137,18 @@ function App() {
         <strong>Search:</strong>
       </InputWithLabel>
       <hr />
-      {isError ? (
-        <p>Something went wrong...</p>
+
+      {stories.isError && <p>Something went wrong...</p>}
+
+      {stories.isLoading ? (
+        <p>Loading...</p>
       ) : (
-        isLoading ? (
-          <p>Loading...</p>
-        ) : (
-          <List
-            list={searchedStories}
-            onRemoveItem={handleRemoveStory}
-          />
-        )
+        <List
+          list={searchedStories}
+          onRemoveItem={handleRemoveStory}
+        />
       )}
+
     </div>
   );
 }
