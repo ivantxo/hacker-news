@@ -62,7 +62,7 @@ function App() {
     { data: [], isLoading: false, isError: false }
   );
 
-  React.useEffect(() => {
+  const handleFetchStories = React.useCallback(() => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
     axios
       .get(url)
@@ -76,6 +76,10 @@ function App() {
         dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
       );
   }, [url]);
+
+  React.useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   const handleSearchInput = event => {
     setSearchTerm(event.target.value);
