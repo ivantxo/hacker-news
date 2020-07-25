@@ -50,12 +50,34 @@ const storiesReducer = (state, action) => {
   }
 };
 
+const getUrl = searchTerm => `${API_ENDPOINT}${searchTerm}`;
+
+const extractSearchTerm = url => url.replace(API_ENDPOINT, '').trim();
+
+const getLastSearches = urls =>
+  urls
+    .reduce((result, url, index) => {
+      const searchTerm = extractSearchTerm(url);
+
+      if (index === 0) {
+        return result.concat(searchTerm);
+      }
+
+      const previousSearchTerm = result[result.length - 1];
+
+      if (searchTerm === previousSearchTerm) {
+        return result;
+      } else {
+        return result.concat(searchTerm);
+      }
+    }, [])
+    .slice(-6)
+    .slice(0, -1);
+
 function App() {
   const [searchTerm, setSearchTerm] = useSemiPersistanceState('search', '');
 
-  const [url, setUrl] = React.useState(
-    `${API_ENDPOINT}${searchTerm}`
-  );
+  const [urls, setUrls] = React.useState([getUrl(searchTerm)]);
 
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
@@ -65,7 +87,8 @@ function App() {
   const handleFetchStories = React.useCallback(async() => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
     try {
-      const result = await axios.get(url);
+      const lastUrl = urls[urls.length - 1];
+      const result = await axios.get(lastUrl);
       dispatchStories({
         type: 'STORIES_FETCH_SUCCESS',
         payload: result.data.hits,
@@ -73,11 +96,16 @@ function App() {
     } catch {
       dispatchStories({ type: 'STORIES_FETCH_FAILURE' });
     }
-  }, [url]);
+  }, [urls]);
 
   React.useEffect(() => {
     handleFetchStories();
   }, [handleFetchStories]);
+
+  const handleSearch = searchTerm => {
+    const url = getUrl(searchTerm);
+    setUrls(urls.concat(url));
+  };
 
   const handleSearchInput = event => {
     setSearchTerm(event.target.value);
@@ -91,9 +119,16 @@ function App() {
   };
 
   const handleSearchSubmit = event => {
-    setUrl(`${API_ENDPOINT}${searchTerm}`);
-    event.preventDefault();
+      handleSearch(searchTerm);
+      event.preventDefault();
   };
+
+  const handleLastSearch = searchTerm => {
+    setSearchTerm(searchTerm);
+    handleSearch(searchTerm);
+  };
+
+  const lastSearches = getLastSearches(urls);
 
   return (
     <div>
@@ -103,6 +138,10 @@ function App() {
         searchTerm={searchTerm}
         onSearchInput={handleSearchInput}
         onSearchSubmit={handleSearchSubmit}
+      />
+      <LastSearches
+        lastSearches={lastSearches}
+        onLastSearch={handleLastSearch}
       />
       <hr />
 
@@ -121,26 +160,43 @@ function App() {
   );
 }
 
+const LastSearches = ({ lastSearches, onLastSearch }) => (
+  <div style={{ display: 'flex', marginBottom: '10px' }}>
+    {lastSearches.map((searchTerm, index) => (
+      <button
+        key={searchTerm + index}
+        type="button"
+        onClick={() => onLastSearch(searchTerm)}
+        style={{ marginRight: '10px' }}
+      >
+        {searchTerm}
+      </button>
+    ))}
+  </div>
+);
+
 const SearchForm = ({
   searchTerm,
   onSearchInput,
   onSearchSubmit,
 }) => (
-  <form onSubmit={onSearchSubmit}>
-    <InputWithLabel
-      id="search"
-      value={searchTerm}
-      onInputChange={onSearchInput}
-    >
-      <strong>Search:</strong>
-    </InputWithLabel>&nbsp;&nbsp;
-    <button
-      type="submit"
-      disabled={!searchTerm}
-    >
-      Submit
-    </button>
-  </form>
+  <div style={{ display: 'flex', marginBottom: '10px' }}>
+    <form onSubmit={onSearchSubmit}>
+      <InputWithLabel
+        id="search"
+        value={searchTerm}
+        onInputChange={onSearchInput}
+      >
+        <strong>Search:</strong>
+      </InputWithLabel>&nbsp;&nbsp;
+      <button
+        type="submit"
+        disabled={!searchTerm}
+      >
+        Submit
+      </button>
+    </form>
+  </div>
 );
 
 const InputWithLabel = ({ id, value, type = 'text', onInputChange, children }) => (
