@@ -104,7 +104,8 @@ function App() {
 
   const handleSearch = searchTerm => {
     const url = getUrl(searchTerm);
-    setUrls(urls.concat(url));
+    if (searchTerm.trim().length)
+      setUrls(urls.concat(url));
   };
 
   const handleSearchInput = event => {
