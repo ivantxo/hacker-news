@@ -71,6 +71,7 @@ const getLastSearches = urls =>
         return result.concat(searchTerm);
       }
     }, [])
+    .filter(searchTerm => searchTerm.trim().length > 0)
     .slice(-6)
     .slice(0, -1);
 
@@ -85,9 +86,12 @@ function App() {
   );
 
   const handleFetchStories = React.useCallback(async() => {
+    const lastUrl = urls[urls.length - 1];
+    const lastSearchTerm = extractSearchTerm(lastUrl);
+    if (!lastSearchTerm.trim().length)
+      return;
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
     try {
-      const lastUrl = urls[urls.length - 1];
       const result = await axios.get(lastUrl);
       dispatchStories({
         type: 'STORIES_FETCH_SUCCESS',
