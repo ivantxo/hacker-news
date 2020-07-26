@@ -1,7 +1,10 @@
 import React from 'react';
 import axios from 'axios';
 
-const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
+const API_BASE = 'https://hn.algolia.com/api/v1';
+const API_SEARCH = '/search';
+const PARAM_SEARCH = 'query=';
+const PARAM_PAGE = 'page=';
 
 const useSemiPersistanceState = (key, initialState) => {
   const [value, setValue] = React.useState(
@@ -27,7 +30,11 @@ const storiesReducer = (state, action) => {
         ...state,
         isLoading: false,
         isError: false,
-        data: action.payload,
+        data: 
+          action.payload.page === 0
+            ? action.payload.list
+            : state.data.concat(action.payload.list),
+        page: action.payload.page,
       };
 
     case 'STORIES_FETCH_FAILURE':
@@ -50,9 +57,14 @@ const storiesReducer = (state, action) => {
   }
 };
 
-const getUrl = searchTerm => `${API_ENDPOINT}${searchTerm}`;
+const getUrl = (searchTerm, page) => 
+  `${API_BASE}${API_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`;
 
-const extractSearchTerm = url => url.replace(API_ENDPOINT, '').trim();
+const extractSearchTerm = url => 
+  url
+    .substring(url.lastIndexOf('?') + 1, url.lastIndexOf('&'))
+    .replace(PARAM_SEARCH, '')
+    .trim();
 
 const getLastSearches = urls =>
   urls
@@ -78,11 +90,11 @@ const getLastSearches = urls =>
 function App() {
   const [searchTerm, setSearchTerm] = useSemiPersistanceState('search', '');
 
-  const [urls, setUrls] = React.useState([getUrl(searchTerm)]);
+  const [urls, setUrls] = React.useState([getUrl(searchTerm, 0)]);
 
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
-    { data: [], isLoading: false, isError: false }
+    { data: [], page: 0, isLoading: false, isError: false }
   );
 
   const handleFetchStories = React.useCallback(async() => {
@@ -95,7 +107,10 @@ function App() {
       const result = await axios.get(lastUrl);
       dispatchStories({
         type: 'STORIES_FETCH_SUCCESS',
-        payload: result.data.hits,
+        payload: {
+          list: result.data.hits,
+          page: result.data.page,
+        }
       });
     } catch {
       dispatchStories({ type: 'STORIES_FETCH_FAILURE' });
@@ -106,8 +121,8 @@ function App() {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleSearch = searchTerm => {
-    const url = getUrl(searchTerm);
+  const handleSearch = (searchTerm, page) => {
+    const url = getUrl(searchTerm, page);
     if (searchTerm.trim().length)
       setUrls(urls.concat(url));
   };
@@ -124,16 +139,22 @@ function App() {
   };
 
   const handleSearchSubmit = event => {
-      handleSearch(searchTerm);
+      handleSearch(searchTerm, 0);
       event.preventDefault();
   };
 
   const handleLastSearch = searchTerm => {
     setSearchTerm(searchTerm);
-    handleSearch(searchTerm);
+    handleSearch(searchTerm, 0);
   };
 
   const lastSearches = getLastSearches(urls);
+
+  const handleMore = () => {
+    const lastUrl = urls[urls.length - 1];
+    const searchTerm = extractSearchTerm(lastUrl);
+    handleSearch(searchTerm, stories.page + 1);
+  };
 
   return (
     <div>
@@ -152,13 +173,22 @@ function App() {
 
       {stories.isError && <p>Something went wrong...</p>}
 
+      <List
+        list={stories.data}
+        onRemoveItem={handleRemoveStory}
+      />
+
       {stories.isLoading ? (
         <p>Loading...</p>
       ) : (
-        <List
-          list={stories.data}
-          onRemoveItem={handleRemoveStory}
-        />
+        <div style={{ marginBottom: '10px' }}>
+          <button
+            type="button"
+            onClick={handleMore}
+          >
+            More...
+          </button>
+        </div>
       )}
 
     </div>
