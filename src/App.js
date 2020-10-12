@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { sortBy } from 'lodash';
 
 const API_BASE = 'https://hn.algolia.com/api/v1';
 const API_SEARCH = '/search';
@@ -190,7 +191,6 @@ function App() {
           </button>
         </div>
       )}
-
     </div>
   );
 }
@@ -247,14 +247,80 @@ const InputWithLabel = ({ id, value, type = 'text', onInputChange, children }) =
   </>
 );
 
-const List = ({ list, onRemoveItem }) =>
-  list.map((item) => (
-    <Item 
-      key={item.objectID} 
-      item={item} 
-      onRemoveItem={onRemoveItem}
-    />)
+const SORTS = {
+  NONE: list => list,
+  TITLE: list => sortBy(list, 'title'),
+  AUTHOR: list => sortBy(list, 'author'),
+  COMMENT: list => sortBy(list, 'num_comments'),
+  POINT: list => sortBy(list, 'points'),
+};
+
+const List = ({ list, onRemoveItem }) => {
+  const [sort, setSort] = React.useState({
+    sortKey: 'NONE',
+    isReverse: false,
+  });
+
+  const handleSort = sortKey => {
+    const isReverse = sort.sortKey === sortKey && !sort.isReverse;
+    setSort({ sortKey: sortKey, isReverse: isReverse });
+  };
+
+  const sortFunction = SORTS[sort.sortKey];
+  const sortedList = sort.isReverse
+    ? sortFunction(list).reverse()
+    : sortFunction(list);
+
+  return (
+    <div>
+      <SortingControls onSort={handleSort} />
+      {sortedList.map((item) => (
+        <Item
+          key={item.objectID}
+          item={item}
+          onRemoveItem={onRemoveItem}
+        />
+      ))}
+    </div>
   );
+};
+
+const SortingControls = ({ onSort }) => (
+  <div style={{ display: 'flex', marginBottom: '10px' }}>
+    <span style={{ width: '40%' }}>
+      <button
+        type="button"
+        onClick={() => onSort('TITLE')}
+      >
+        Title&#8661;
+      </button>
+    </span>
+    <span style={{ width: '10%' }}>
+      <button
+        type="button"
+        onClick={() => onSort('AUTHOR')}
+      >
+        Author&#8661;
+      </button>
+    </span>
+    <span style={{ width: '7%' }}>
+      <button
+        type="button"
+        onClick={() => onSort('COMMENT')}
+      >
+        Comment&#8661;
+      </button>
+    </span>
+    <span style={{ width: '7%' }}>
+      <button
+        type="button"
+        onClick={() => onSort('POINT')}
+      >
+        Points&#8661;
+      </button>
+    </span>
+  </div>
+);
 
 const Item = ({ item, onRemoveItem }) => (
   <div style={{ display: 'flex', marginBottom: '10px' }}>
@@ -262,8 +328,8 @@ const Item = ({ item, onRemoveItem }) => (
       <a href={item.url}>{item.title}</a>
     </span>
     <span style={{ width: '10%' }}>{item.author}</span>
-    <span style={{ width: '5%' }}>{item.num_comments}</span>
-    <span style={{ width: '5%' }}>{item.points}</span>
+    <span style={{ width: '7%' }}>{item.num_comments}</span>
+    <span style={{ width: '7%' }}>{item.points}</span>
     <span style={{ width: '5%' }}>
       <button type="button" onClick={() => onRemoveItem(item)}>
         Dismiss
